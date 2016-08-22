@@ -1,0 +1,178 @@
+########## Shell Programming
+# give permission to every script: 755
+echo $PATH
+$1 			 # is argument 1, write it after script name
+$0 			 # shows the filename
+bash -x file # shows how a script ran, good for finding errors
+$#			 # number of command line parameters, arguments
+$*			 # contains all command line parameters, $@ does the same thing
+$@			 # contains all command line arguments
+$?			 # exit status of the most recently executed command
+$$ 			 # Process ID of the shell
+$! 			 # process ID of the most recently executed background command
+read         # expects user to type a string (anything typed is treated as a string)
+(())		 # invokes shell arithmetic
+
+# Class Example
+---
+if test $# -eq 0
+then
+        echo "`basename $0`:missing operand"
+        exit 1;;
+fi
+echo first is $1
+echo second is $2
+echo the number of arguments provided is $#
+---
+
+# for project, make error messages that mimic the rm error message 
+Symbol Meaning # when comparing integers
+-it 	<
+-gt		>
+-le 	<=
+-ge 	>=
+-eq 	==
+-ne 	!=
+
+# Example
+---
+#!/bin/bash
+
+# declare integers
+num1=2
+num2=2
+if [ $num1 -eq $num2 ]
+then
+	echo "Both Values are equal"
+else 
+	echo "Values are not equal"
+fi 
+---
+# Both Values are equal is displayed
+
+Symbol Meaning # when using strings for comparing values
+=		equal 
+!=		not equal 
+<		less than 
+>		greater than
+-n s1	s1 is not empty
+-z s1	s1 is empty
+
+Symbol 					Meaning
+-d directory name		Returns true if directory exists 
+-e filename 			Returns true if file exists
+-f filename 			Check for file existence not a directory 
+-r filename 			Check if file is readable 
+-s filename 			Check if file is of nonzero size
+-w filename 			Check if file is writable 
+-x filename 			Check if file is executable
+-s filename				Check if file is not empty
+
+########## Loops
+---
+#!/bin/bash
+for i in 1 2 3 4 5
+do
+  echo "Number $i"
+done
+---
+Number 1
+Number 2
+Number 3
+Number 4
+number 5
+
+########## File tests for IF
+can use test blah or [ blah ] # the 2 spaces are mandatory
+# Options
+-e $name	# File name exists.
+-d $name	# File name is a directory. 
+-f $name 	# File name is a regular file.
+-h $name	# File name is a symbolic link.
+-r $name	# File name exists and is readable. 
+-w $name	# File name exists and is writeable. 
+-x $name	# File name exists and is executable. 
+-s $name	# File name exists and has nonzero size.
+
+########## Conditional Operators
+! t1	 # not test1
+t1 II t2 # either test1 or test 2, in if statement
+t1 && t2 # test1 and test2
+		 # -o and -a can only be used inside test syntax, they are OR and AND.
+		 
+########## Flow Control
+for # iterates a set number of times, this is known
+for ((i=1;i<=10;i++)) # this only work in Linux, i stands for index
+do
+	echo $i
+done
+
+# checks what is an option and what is an argument
+vi myscript
+chmod 755 myscript
+---
+#!/bin/bash
+for i in $@
+do
+if echo $i | grep -q '^-'
+then
+	echo $i is of type option
+	if echo $i | grep -q 'a' 		# to copy these 4 lines: ESC, 4Y, P. Change the the second 'a' to 'b' and so on
+	then 							
+		echo option a is set
+	fi
+	if echo $i | grep -q 'b'
+	then 
+		echo option b is set
+	fi
+	if echo $i | grep -q 'c'
+	then 
+		echo option c is set
+	fi
+else
+	if test -f $i
+	then
+		echo $i is a file
+	else
+		echo $i is not a file
+	fi
+fi
+done
+---
+myscript -ab ../undermw fish carrot
+
+# While and Until loop
+while # go round until something happens
+
+# Scripts checks if user is logged in, loops indefenetly
+vi detect_lohith
+chmod 755 detect_lohith
+---
+while true # infinite loop
+do
+	# I do this while lohith is logged, it looks innocent
+	while who | grep -q lohith
+	do
+		echo "lohith is logged, be careful"
+		sleep 1
+	done
+	# I do this whilst lohith is away, my dastadly deed
+	until who | grep -q lohith
+	do
+		echo "lohith is NOT logged, tee hee"
+		sleep 1
+	done
+done
+---
+
+break 	 # terminates the loop
+continue # terminates current iteration of loop and moves to the next
+
+########## Functions
+# A function is a subroutine, used when doing the same operation more than once, function is in the format: FunctionName(){code}
+return # is like exit but only for a function, rest of script still runs
+# Functions can set up local variables
+
+########## Built-in Commands
+# bash has function
+type echo # echo is a builtin
