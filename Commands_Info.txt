@@ -1,0 +1,151 @@
+########## Basic Commands
+cd    # moves location to home dir, arguments ~ and $HOME do the same, .. move up a dir 
+pwd   # shows current location
+ls    # list files and folders in location, -a list all files including hidden ones, -l also lists file size, owner, privileges and modified time, -ls list & sort by size
+mv    # move to new location, can also rename, 'filename' 'directory' or 'filename' 'newfilename'
+cp	  # copies files to dir or replaces files, 'filename' 'directory' or 'filename1' 'filename2'
+mkdir # creates new dir
+rm 	  # deletes files, -r deletes folders and files inside, -i is interactive(asks for confirmation), -v confirms action completed
+man   # provides information on any other command
+touch # creates file, can create multiple files at once
+wc    # word count, -l for lines, -w for words, -c for characters
+file  # determines type of data in file
+nice -n 'number' ps -l # run process but add a vlue to its PRI
+ln 'file1' 'dir/file2' # links file1 with file2
+date  		 		   # Display date
+echo 'text'  		   # write 'text', v* lists all files in current dir on 1 line
+
+########## Basic Information
+# tty is the terminal number, tty1 is direct communication, pts is network connection, PPID is Parent Process ID, PRI is priority for process where smaller values have higher priority
+# block mode = words (efficient, talks to buffer), character mode = 1 letter (inefficient, immediate)
+# Users: Owner, Group, Others. this is for rights. x is execute, r is read, w is write for octal mode:
+--- 0 # no rights
+--x 1
+-w- 2
+-wx 3
+r-- 4
+r-x 5
+rw- 6
+rwx 7
+# /etc - system files, /var - log files, /usr - system standard files
+# the inode is the repository of the data, 2 files pointing at the same inode are in fact the same file
+
+########## Redirection, put output (1) or error (2) into file
+ls 1> dirfile  # overrides output
+ls 1>>dirfile  # appends output
+ls 2> dirfile  # overrides error
+ls 2>>dirfile  # appends error
+2>/dev/null    # sends errors to the Unix Black Hole, deleted
+tee			   # similar to > but better, stores and displays
+
+########## find Command, searches the tree for files, recurise = goes into every folder - find [where to search] [what to search for] [action]
+find /etc -name "p*"                 # find files starting with 'p', it will include error lines
+find /etc -name "p*" 2>efile         # find files starting with 'p', only output lines displayed (errors redirected in efile)
+find /etc -name "p*" 1>nfile         # find files starting with 'p', only error lines displayed (output redirected in nfile)
+find /etc -name "p*" 1>nfile 2>efile # nothing on screen, all redirected
+find /etc -name "p*" 1>afile 2>&1    # output and errors redirected to same file
+find /etc -name "p*" 2>&1 1>afile    # it won't work, parses 1 first, parsing is left to right, channel 1 is pointing to the screen at the moment of 1>afile
+find /etc /var -type -f -ntime -1 -size +10k -print # find the names of the files in etc and in var modified within the last 24hrs (-ntime -1) with a size greater than 10k
+find . -name "p*" -inum 147218 -exec rm {} \;       # the dot means current dir, inum is the inode number, exec is execute command, {insert_filename}
+find /student_files -name "*re*" -print             # prints files with 're' embedded in the name
+find . –atime -1 -print								# find files in the current dir with access time less than 1 day
+find /student_files -size -100c –exec wc {} \;		# find files of size less than 100 chars and run the wc command on them
+find ~ -empty –ok rm {} \;							# find empty files within the home dir and interactively removing them (asking)
+
+########## Pipping
+who 					  # see who is online in the network
+who | wc -l 			  # count nr accounts online in the network by counting nr of lines in output, right of pipe counts from what is found from left of pipe
+ls | tee filelist | wc -l # counts nr of files in current directory, tee writes to file
+
+########## grep Command
+grep 					  				  # search files for string or pattern, patterns will contain metachars, wildcarad metachars are different from regular expression metachars
+										  # regular expression metachars for text in files, wildcard metachars for file names in trees
+grep hall /student_files/day1/grepFile    # displays lines containing 'hall'
+grep -w hall /student_files/day1/grepFile # displays lines containing the word 'hall'
+grep -n hall /student_files/day1/grepFile # displays lines containing 'hall' and their line number
+grep -v hall /student_files/day1/grepFile # displays lines not containing 'hall'
+grep -c hall /student_files/day1/grepFile # counts the lines containing 'hall'
+grep -i hall /student_files/day1/grepFile # -i is case insensitive
+grep 'oo.*oo' blah                        # lines with two 'oo' in them somewhere
+grep -q 								  # keeps grep quiet
+
+########## Regular Expression Metacharacters
+^   # Match at start of line
+$   # Match at end of line
+[]  # Match anything in the [ ] for 1 character position
+.   # Match a single character
+[^] # Match a single character with any character not in range
+*   # Match zero or more occurrences of the preceding character 
+.*  # Match with any number of characters
+\   # Escape the metacharacter and treat them as a literal
+
+grep '^VLAD' WaitingForGodot 	   # find all the lines starting with 'VLAD', includes spaces
+grep '^ *VLADIMIR' WaitingForGodot # find all the lines starting with 'VLAD' no matter how many spaces before VLAD
+grep '^1.2$' rnumbers              # find all the lines having 3 digit numbers starting with 1 and ending with 2
+grep '^1.*2$' rnumbers             # find all the lines having numbers starting with 1 and ending with 2
+grep ' \*' WaitingForGodot		   # find all lines where a space is followed by a star character (literal)
+grep ' \\\*' WaitingForGodot	   # find all lines where a space is followed by a backslash and a star character (literal)
+
+########## Job Control
+ps 	  	 	   # show processes running in memory
+jobs		   # lists all background and stopped processes 
+nohup 	 	   # don't kill background process even if I log out
+CTRL + Z 	   # suspends foreground processes and puts them in the background
+CTRL + C 	   # kills process
+:q 		 	   # quit process
+kill -19 28183 # send stop signal (19) to process 28183, type kill  -l for full list of signal codes, default code is 15, smaller number is stronger, 9 stronger than 15
+			   # code 15 sometimes doesn't work because it is trapable, initiates a tidy shut down, 9 is not, terminates uncleanly, no synchronisation with disk and stuff
+fg %2 		   # resume background job 2 on foreground
+sleep n &      # runs sleep command for n seconds in the background
+
+########## Vi
+vi undermw # launch vi, undermw is in /tmp
+:wq 	   # write+quit (save changes and terminate)
+:wq! 	   # force write quit
+:q 		   # quit
+:q!		   # force quit
+command mode # keys are interpreted as commands h,j,k,l = move left, down, up, right. x deletes a character, dw deletes word, 10G jumps to line 10, dd deletes a line
+ex mode		 # wq is write+quit. 3,5d deletes lines 3 to 5.
+i,I,a,A,o,O  # takes you into insert mode. i = insert to left of cursor, I = insert at start of line, a = append to right of cursor, A = append to end of line, o = open new line below cursor, O = open new line above cursor
+ESC			 # exit insert mode, back to command mode
+
+########## More Commands
+bash -x script  # see where stuff goes wrong
+clear 	 	    # clears screen
+where ls 	    # shows location of ls command
+finger	 	    # like who with more details
+sort accounts   # sorts lines alphabetically inside accounts (only display, changes not saved), -t field delimiter too (i.e. separated by :), -n to sort numbers properly, -r is reverse
+users		    # lists all users in a line
+dirname /etc/passwd # displays dir of passwd
+uniq 		    # removes repeated lines, -d shows the duplicated line, uniq only works on sorted data
+cut -d -f1 blah	# -d is field delimiter, -f1 is 1st field, only shows what the cut asks for
+tr 'ei' 'EI'	# translates from 'ei' to 'EI', used in a pipe only, -d deletes whatever is in the ' ', -s x prevents repetition of the character x
+set a b c 		# sets a, b, c as $1, $2 and $3 that can be called by echo or whatever else
+${10}			# proper syntax, reads 10 instead of 1 and the string 0
+
+########## Environment
+env 					 # loads env elements common to every user
+.bash_profile   		 # tailors profile to individual, hidden in Home dir
+etc/profile     		 # sets up an uniform environment (colour scheme in ls is an env feature, set up in etc/profile)
+export          		 # promotes variable to environment variable, convention is for env vars to be UPPER CASE
+alias 					 # lists current aliases, when you type a command, aliases are searched first
+alias hmli='who | wc -l' # hmli is the alias of 'who | wc -l'
+unalias hmli			 # deletes hmli alias
+
+########## Quantation and Other Commands
+echo * 	 				# displays all files and folders in the current dir
+echo "*" 				# displays *, as a literal, quotes are metacharacters
+echo '*' 				# the same as before
+echo "My home is $HOME" # the $ survives the "", "" are weak
+echo 'My home is $HOME' # stronger than double quotes
+echo 'George said "no"' # shows the "no"
+echo "George said 'no'" # shows the 'no'
+echo \*					# shows *, \ beat "",'' beat \ ""
+#` is the grav accent 
+date +%A 				# shows current day, Wednesday, 'a' abbreviates to Wed, T shows time, H shows hour, M shows minutes, S shows seconds
+echo Today is `date +%A`  # Today is Wednesay
+echo Today is $(date +%A) # same as before
+touch 					# doesn't modify files, only the modified time
+ls -i undermw 			# shows the inode number undermw
+inode= $(ls -i undermw | cut -d ' ' -f1)  # almost works, tries to capture output into a variable name
+basename $1 			# gets the last name from the path
