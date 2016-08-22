@@ -1,0 +1,230 @@
+########## - Basic Functionality - ##########
+# Write a script called safe_rm that mimics the rm command - safe_rm should be able to accept the name of a file as a command line argument as rm does, 
+# but instead of deleting the file your script should move it to a recycle bin directory called deleted in your home directory.
+# 1.	Script name is safe_rm and stored in $HOME/project.
+# 2.	The recycle bin should be $HOME/deleted.  If the deleted directory does not already exist, your script should create it.
+# 3.	The file to be deleted should be a command line argument and the script executed as follows safe_rm fileName
+# 4.	The script should test for the following error conditions and display the same error messages as the rm command.
+# -	File does not exist, display error message if file supplied does not exist
+# -	No filename provided, display error message if no file provided as an argument
+# -	Directory name provided, display error message if directory provided instead of file
+# 5.	The filenames in the recycle bin, should be in the following format: fileName_inode
+# For example, if a file named f1 with inode 1234 was removed, the file in the recycle bin should be named f1_1234
+# This gets around the potential problem of deleting 2 files with the same name.
+# The recycle bin will only contain files, not directories with files.
+# 6.	Create a hidden file called .restore.info in $HOME. 
+# Each line of this file should contain the name of the file in the recycle bin, followed by a colon, followed by the original full path of the filename.
+# For example, if a file called f1, with an inode of 1234 was removed from the /home/trainee1 directory, this file would contain:
+# f1_1234:/home/trainee1/f1
+# If  another file named f1, with an inode of 5432, was removed from the /home/trainee1/testing directory, then .restore.info would contain:
+# f1_1234:/home/trainee1/f1
+# f1_5432:/home/trainee1/testing/f1
+# 7.	Test the file being deleted is not safe_rm. If it is display an error message “Attempting to delete safe_rm – operation aborted” and terminate the script with an exit status.
+# (Tip – copy safe_rm before testing this works).
+/var/tmp/feedback
+
+vi safe_rm
+:wq
+chmod 755 safe_rm
+vi safe_rm
+i
+---
+#!/bin/bash
+if [ ! -d $HOME/deleted ]
+then
+	mkdir $HOME/deleted
+fi
+
+if [ $# -eq 0 ]
+then
+	echo "Missing operand"
+	exit 1
+	elif [ ! -e $1 ]
+	then
+		echo "cannot remove $1: No such file or directory"
+		exit 1
+	elif [ -d $1 ]
+	then
+		echo "cannot remove $1: Is a directory"
+		exit 1
+	elif echo $1 | grep -q "safe_rm"
+	then
+		echo "Attempting to delete safe_rm – operation aborted"
+		exit 1
+else
+	file_inode=$(ls -i $1 | cut -d " " -f1)
+	file_name=$(basename $1)
+	file_new_name=$file_name"_"$file_inode
+	pathname=$(readlink -f $1)
+mv $1 $file_new_name
+mv $file_new_name $HOME/deleted
+echo $file_new_name':'$pathname >> $HOME/.restore.info
+fi
+---
+ESC
+SHIFT+Z+Z
+./safe_rm testFile
+
+########## - Basic Restore - ##########
+# Write a script called safe_rm_restore to restore individual files back to their original location.
+# The user will determine which file is to be restored and use the file name with inode number in order to restore the file.  For example:  safe_rm_restore f1_1234
+# 1.	Script name is safe_rm_restore and stored in $HOME/project
+# 2.	The file to be restored should be a command line argument and the script should be executed as follows 
+# safe_rm_restore f1_1234  (this will be the name of the file in $HOME/deleted)
+# 3.	The file must be restored to its original location, using the pathname stored in the .restore.info file.
+# 4.	The script should test for the following error conditions and display similar error messages to the rm command
+# 		-	File does not exist, display error message if file supplied does not exist
+# 		-	No filename provided, display error message if no file provided as argument
+# 5.	The script should check whether the file being restored already exists in the target directory, and if it does the user is asked “Do you want to overwrite? y/n” 
+# The script should restore the file if the user types in y, Y or yes to this prompt and not restore it if they type in n or anything else. Please ensure this full functionality works.
+# 6.	After the file has been successfully restored, the entry in the .restore.info file is removed.
+vi safe_rm_restore
+:wq
+chmod 755 safe_rm_restore
+vi safe_rm_restore
+i
+---
+#!/bin/bash
+if [ $# -eq 0 ]
+then
+    echo "Missing operand"
+    exit 1
+    elif [ ! -e $HOME/deleted/$1 ]
+    then
+        echo "Cannot restore $1: No such file"
+        exit 1
+fi
+filepath_dir=$(grep $1 $HOME/.restore.info | cut -d ":" -f2)
+filepath=$(readlink -f $filepath_dir)
+    if [ -e $filepath_dir ]
+    then
+        read -p "Do you want to overwrite? y/n: " answer
+        case $answer in
+        y|Y|yes) mv $HOME/deleted/$1 $filepath
+                 grep -v $1 $HOME/.restore.info > $HOME/.restoredump.info
+                 mv $HOME/.restoredump.info $HOME/.restore.info
+                 echo "done"
+                 exit 0;;
+        n|*) echo "done"
+             exit 0;;
+        esac
+    else
+        mv $HOME/deleted/$1 $filepath
+        grep -v $1 $HOME/.restore.info > $HOME/.restoredump.info
+        mv $HOME/.restoredump.info $HOME/.restore.info
+        echo "done"
+fi
+---
+ESC
+SHIFT+Z+Z
+./safe_rm_restore alpha
+
+########## - Multiple Files, Wildcards and Option Flags - ##########
+# The real rm can remove multiple files (i.e. rm file1 file2 file2), and use wildcards (e.g. rm f*).  
+# The real rm can use the –i flag (for interactive), and –v flag (for verbose). 
+# Add this functionality to your safe_rm.
+# 1.	Ensure the script can delete multiple files and wildcards.
+# 2.	Update the script to test for the command line argument of –i (1st argument) and if used, display a message asking for confirmation, in the same way as rm –i.  
+# 3.	Update the script to test for the command line argument of –v (1st argument) and if used, display a message confirming deletion, in the same way as rm –v.
+# 4.	Update script to support the use of both i and v as the 1st argument (-iv).
+
+########## - Remove Files Recursively - ##########
+# The real rm can remove directories and their contents with the –r option. Add this functionality to your safe_rm.
+# 1.	Update your script to support the use of –r to remove a directory and its contents.
+# 2.	The $HOME/deleted directory will have a flat structure, containing only files.
+# Do not move the directories into $HOME/deleted, it is only necessary to move files. 
+# Once all files have been moved, delete the directory. The entry in the .restore.info, should record the directory location, for later restoration.
+vi safe_rm  or nano safe_rm
+---
+#!/bin/bash
+i_option=0
+v_option=0
+r_option=0
+option=0
+if [ ! -d $HOME/deleted ]
+then
+        mkdir $HOME/deleted
+fi
+
+if [ $# -eq 0 ]
+then
+        echo "Missing operand"
+        exit 1
+else
+	for i in $@
+	do
+		if [[ $1 == "-"* ]]
+		then
+			option=1
+			if [[ $1 == *"i"* ]]
+			then
+				i_option=1
+				echo "i activated"
+			fi
+			if [[ $1 == *"v"* ]]
+			then
+				v_option=1
+				echo "v activated"
+			fi
+			if [[ $1 == *"r"* ]]
+			then
+				r_option=1
+				echo "r activated"
+			fi
+		shift
+		fi
+	done
+    for i in $@
+    do
+		if [ ! -e $i ]
+        then
+            echo "cannot remove $i: No such file or directory"
+            exit 1
+            elif [ -d $i ]
+            then
+                echo "$i Is a directory"
+				if [[ $r_option == 1 ]]
+				then
+					$0 $1"/"*
+					rm $1 -r
+					echo "Files in $i removed"
+					exit 0
+				else
+					echo "cannot remove $1: Is a directory"
+					exit 1
+				fi
+            elif echo $i | grep -q "safe_rm"
+            then
+                echo "Attempting to delete safe_rm : Operation aborted"
+                exit 1
+            else
+                file_inode=$(ls -i $i | cut -d " " -f1)
+                file_name=$(basename $i)
+                file_new_name=$file_name"_"$file_inode
+                pathname=$(readlink -f $i)
+				if [[ $i_option == 1 ]] 
+				then
+					read -p "Remove regular file $i?: " choice
+					case $choice in
+					y|Y|yes) ;;
+					n|*) 	 exit 0;;
+					esac
+				fi
+				if [[ $v_option == 1 ]] 
+				then
+					echo "removed $i"
+				fi
+				mv $i $file_new_name
+				mv $file_new_name $HOME/deleted
+				echo $file_new_name':'$pathname >> $HOME/.restore.info
+        fi
+    done
+fi
+---
+
+########## - Restore files removed recursively - ##########
+# Update safe_rm_restore to enable the restoration of files, that were removed recursively.
+# 1.	Ensure your script is able to restore files, previously removed using safe_rm –r.
+# 2.	The script should identify the directory to restore the file to, by accessing the .restore.info file. It will then need to recreate this directory, before restoring the file.
+
+NO!
