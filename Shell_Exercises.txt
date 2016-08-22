@@ -1,0 +1,282 @@
+########## 1 - Shell Scripting Intro
+#1.1	Write a script that displays the environment variables.
+#!/bin/bash
+env
+
+#1.2 Write a script that creates a directory called mydir and three files called myfile1, myfile2 and myfile3.
+#!/bin/bash
+mkdir mydir
+touch myfile1 myfile2 myfile3
+
+#1.3 Write a script that moves myfile1, myfile2 and myfile3 into mydir.
+#!/bin/bash
+mv myfile1 mydir
+mv myfile2 mydir
+mv myfile3 mydir
+
+#1.4 Write a script that displays the first 6 lines of /examples/lionsInTheStreet file.
+#!/bin/bash
+head -6 /examples/lionsInTheStreet
+
+#1.5 Write a script that counts how many files you have in your ~ directory.
+#!/bin/bash
+ls | wc -l
+
+#1.6 Investigate the 'sort' command. In conjunction with a pipe, use it to sort the output of ls -l based on various different fields.
+#!/bin/bash
+ls -l ~ | sort -t ' ' -k5 -n
+
+########## 2 - Variables and Command Substitution
+#2.1 Write a script called countString that accepts a string as an argument and returns the number of characters in the string.
+vi countString
+i
+---
+#!/bin/bash
+echo -n $1 | wc -c
+---
+./countString blah
+
+#2.2 Write a script called countString2 that accepts two arguments: [string] and [file]. It should count the number of characters in [string] and redirect the result to the [file].
+vi countString2
+SHIFT+Z+Z
+chmod 755 countString2
+vi countString2
+i
+---
+#!/bin/bash
+echo -n $1 | wc -c > $2
+---
+
+#2.3 Write a script called addToFile that accepts two arguments: a string and a filename. It should append the given string to the given file.
+vi addToFile
+SHIFT+Z+Z
+chmod 755 addToFile
+vi addToFile
+i
+---
+#!/bin/bash
+echo -n $1 >> $2
+---
+ESC
+SHIFT+Z+Z
+./addToFile blah appendFile
+
+# 2.4 Write a script called countField that accepts three arguments: [string], [delimiter] and [fieldNumber]. It should cut out the field [fieldNumber] based on [delimiter] and output the number of characters in the field.
+vi countField
+SHIFT+Z+Z
+chmod 755 countField
+vi countField
+i
+---
+#!/bin/bash
+echo –n $(echo $1 | cut –d"$2" –f$3) | wc -m
+---
+ESC
+SHIFT+Z+Z
+countField Kill:Me : 2
+
+#2.5 Write a script that takes in two numbers as arguments, [num1] and [num2]. The script should multiply them together and assign the result to a variable [var]. 
+# Finally, the script should output the message [num1] x [num2] = [var].
+vi plsno
+SHIFT+Z+Z
+chmod 755 plsno
+vi plsno
+i
+---
+#!/bin/bash
+num1=$1
+num2=$2
+var=$[ $num1 * $num2 ]
+echo $num1 " x " $num2 " = "$var
+---
+ESC
+SHIFT+Z+Z
+plsno
+
+#2.6 Create a script to produce the following welcome screen: 
+
+===============
+FDM LOGIN PAGE
+===============
+Username :
+
+After user entered a username, password prompt should appear
+
+===============
+FDM LOGIN PAGE
+===============
+Username : Emma
+Password :
+
+Then script should display the user’s username and password.
+
+===============
+FDM LOGIN PAGE
+===============
+Username : Emma
+Password : 
+Your username is : Emma
+Your password is : 111
+Optionally, display the user details in uppercase.  (Tip : you need to use tr command)
+
+vi LoginPage
+:wq
+chmod 755 LoginPage
+vi LoginPage
+i
+---
+#!/bin/bash
+cat << eof
+===============
+FDM LOGIN PAGE
+===============
+eof
+read -p "Username : " username
+read -p "Password : " password
+echo Username is $username and Password $password
+---
+ESC
+SHIFT+Z+Z
+LoginPage
+
+########## 3 - Conditional Scripts
+#3.1	 Write a script that accepts two strings as inputs. It should output "First string is longer", "Second string is longer" or "Strings are of equal length" depending on the inputs.
+vi stringCompare
+:wq
+chmod 755 stringCompare
+vi stringCompare
+i
+---
+#!/bin/bash
+string1=$(echo -n $1 | wc -c )
+string2=$(echo -n $2 | wc -c )
+if [ $string1 -gt $string2 ]
+then
+        echo "First string is longer"
+elif [ $string1 -lt $string2 ]
+then
+        echo "Second string is longer"
+else
+        echo "Strings are of equal length"
+fi
+---
+ESC
+SHIFT+Z+Z
+stringCompare
+
+#3.2 Write a script that presents the user with a menu with options A, B and C. 
+# Your script should perform simple echo statements for options A and B, and quit if option C is selected.
+# If any other option is selected, a message should appear stating Invalid option.
+vi selector
+:wq
+chmod 755 selector
+vi selector
+i
+---
+#!/bin/bash
+cat<<eof
+==============
+Make a choice
+A)
+B)
+C)
+==============
+eof
+read -p "Type a choice: " choice
+case $choice in
+A) echo "A";;
+B) echo "B";;
+C) exit 0;;
+*) echo "Invalid Option";;
+esac
+---
+ESC
+SHIFT+Z+Z
+selector
+
+#3.3	Write a script that asks a user to enter a file name. 
+# Then, the script needs to check for file existence. If the file does not exist, that script should display an error message and then exit the script.
+# If the file exists, script should ask if user really wants to delete the file.
+# If the answer is yes or y, the script should remove the file.
+# If the answer is no or n, the script should exit from the script. 
+# If the answer is neither yes nor no, the script should display an error message and exit from the script.
+vi fileRemover
+:wq
+chmod 755 fileRemover
+vi fileRemover
+i
+---
+#!/bin/bash
+read -p "Type a filename to delete: " file
+if [ ! -f $file ]
+then
+	echo "File does not exist"
+	exit 1
+else
+	read -p "Confirm deletion of $file? " choice
+	case $choice in
+	y|yes) rm $file;;
+	n|no) exit 0;;
+	*) echo "Invalid option"
+	   exit 1;;
+	esac
+fi
+---
+ESC
+SHIFT+Z+Z
+fileRemover
+
+#3.4	Write a script that accepts a file as an argument. 
+# It should check if the given file is empty or not and then it should display an appropriate message.
+vi fileChecker
+:wq
+chmod 755 fileChecker
+vi fileChecker
+i
+---
+#!/bin/bash
+if [ -s $1 ]
+then
+	echo "$1 is not empty"
+else
+	echo "$1 is empty"
+fi
+---
+ESC
+SHIFT+Z+Z
+fileChecker
+
+#3.5	Modify the exercise 3.3. Script should ask two different questions to a user.
+# If the given file is empty, the script should ask “Do you want to delete an empty file filename?”
+# If the file is not empty, the script should ask “Do you want to delete non-empty filename?”
+# Depending on the user response, the script should delete the file.
+vi fileDeleteAdv
+:wq
+chmod 755 fileDeleteAdv
+vi fileDeleteAdv
+i
+---
+#!/bin/bash
+read -p "Type a filename to delete: " file
+if [ ! -f $file ]
+then
+	if [ -s $file ]
+	then
+		read -p "Do you want to delete non-empty file $file? " answer
+	else
+		read –p "Do you want to delete empty file $file?" answer
+	fi
+else
+	echo "File does not exist"
+	exit 1
+fi
+case $answer in
+y|yes) rm $file;;
+n|no) exit 0;;
+*) echo "Invalid option"
+   exit 1;;
+esac
+---
+ESC
+SHIFT+Z+Z
+fileDeleteAdv
